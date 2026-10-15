@@ -60,7 +60,9 @@ func _ready() -> void:
 		b.mouse_exited.connect(func(): b.create_tween().tween_property(b, "scale", Vector2.ONE, 0.1))
 		ui.add_child(b)
 		buttons.append(b)
-	buttons[0].pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/chef.tscn"))
+	buttons[0].pressed.connect(func():
+		_fullscreen()
+		get_tree().change_scene_to_file("res://scenes/chef.tscn"))
 	buttons[1].pressed.connect(_open_settings)
 	buttons[2].pressed.connect(func(): get_tree().quit())
 	# на вебе (Yandex Games) выйти нельзя — кнопку «Выход» прячем
@@ -78,6 +80,15 @@ func _open_settings() -> void:
 	settings.open()
 
 
+## На телефоне в браузере — во весь экран, без адресной строки.
+## Браузер разрешает это только по нажатию, поэтому вызываем на первом тапе.
+## (iPhone так не умеет — там игру добавляют на экран «Домой».)
+func _fullscreen() -> void:
+	var mobile := OS.has_feature("web_android") or OS.has_feature("web_ios")
+	if mobile and DisplayServer.window_get_mode() != DisplayServer.WINDOW_MODE_FULLSCREEN:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+
+
 func _unhandled_input(e: InputEvent) -> void:
 	var tap: bool = (e is InputEventMouseButton and e.pressed) or (e is InputEventKey and e.pressed and not e.echo)
 	if not tap:
@@ -85,6 +96,7 @@ func _unhandled_input(e: InputEvent) -> void:
 	if settings.visible:
 		return
 	if _stage == 0:
+		_fullscreen()
 		_show_menu(false)
 	elif e is InputEventMouseButton:
 		_squash_at(e.position)
